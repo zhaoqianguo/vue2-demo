@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios@0.12.0/dist/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/lodash@4.13.1/lodash.min.js"></script>
+    <style>
+      .fade-enter-active,
+      .fade-leave-active {
+        transition: opacity 2.5s;
+      }
+      .fade-enter, .fade-leave-to /* .fade-leave-active below version 2.1.8 */ {
+        opacity: 0;
+      }
+
+      .active {
+        background-color: cornflowerblue;
+        width: 100px;
+        height: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      {{ msg }}
+
+      <div v-bind:title="msg">v-bind</div>
+      <transition name="fade">
+        <p v-if="toggle">v-if</p>
+        <p v-else>v-else</p>
+      </transition>
+
+      <button v-bind:disabled="false">Button</button>
+
+      <div>
+        computed <br />
+        {{reversedMessage}} {{now()}}
+      </div>
+
+      <ol>
+        <li v-for="item in forData">{{item.text}}</li>
+      </ol>
+
+      <div>{{msg}}</div>
+      <button v-on:click="buttonClick">reverse msg</button>
+
+      <div>
+        <div>{{msg}}</div>
+        <input type="text" v-model="msg" />
+      </div>
+
+      <h2>watch & computed</h2>
+      <div>
+        <p>
+          Ask a yes/no question:
+          <input v-model="question" />
+        </p>
+        <p>{{ answer }}</p>
+      </div>
+
+      <h2>class & style</h2>
+      <div>
+        <div class="static" v-bind:class="{ 'active': isActive, 'text-danger': hasError }"></div>
+      </div>
+
+      <h2>todo-list</h2>
+      <div>
+        <input type="text" v-model="groceryText" /> <button v-on:click="addGrocery">add list</button>
+
+        <todo-item v-for="item in groceryList" v-bind:item="item" v-bind:key="item.id"></todo-item>
+      </div>
+
+      <h2>form input</h2>
+      <div>
+        <input type="radio" v-model="toggle" v-bind:value="a" />
+        <button v-on:click="changeToggle">changeToggle</button>
+      </div>
+
+      <h2>component</h2>
+      <div>
+        <button-counter v-bind:title="msg"></button-counter>
+        <button-counter></button-counter>
+        <button-counter></button-counter>
+      </div>
+      <h2>blog</h2>
+      <div :style="{ fontSize: postFontSize + 'em' }">
+        <blog-post v-for="post in posts" v-bind:key="post.id" v-bind:post="post" v-bind:add-size="addSize">
+          111111111
+        </blog-post>
+      </div>
+    </div>
+  </body>
+
+  <script>
+    Vue.component('button-counter', {
+      props: ['title'],
+      data: function () {
+        return {
+          count: 0,
+        };
+      },
+      template: '<button v-on:click="count++">You clicked me {{ count }} {{ title }} times.</button>',
+    });
+
+    Vue.component('blog-post', {
+      props: ['post', 'add-size'],
+      template: `
+      <div class="blog-post">
+      <h4>{{ post.title }}</h4>
+      <button v-on:click="addSize(122)">
+        Enlarge text
+      </button>
+      <slot></slot>
+      <div v-html="post.content"></div>
+    </div>`,
+    });
+
+    Vue.component('todo-item', {
+      props: ['item'],
+      template: '<li>{{item.text}}</li>',
+    });
+
+    var app = new Vue({
+      el: '#app',
+      data: {
+        msg: 'root Vue instance',
+        toggle: false,
+        forData: [{ text: '学习 JavaScript' }, { text: '学习 Vue' }, { text: '整个牛项目' }],
+        groceryText: '',
+        groceryList: [{ id: 1, text: '111' }],
+        question: '',
+        answer: 'I cannot give you an answer until you ask a question!',
+        isActive: true,
+        hasError: true,
+        a: '111',
+        postFontSize: 1,
+        posts: [
+          { id: 1, title: 'My journey with Vue', content: '<b>121212</b>' },
+          { id: 2, title: 'Blogging with Vue' },
+          { id: 3, title: 'Why Vue is so fun' },
+        ],
+      },
+      watch: {
+        // 如果 `question` 发生改变，这个函数就会运行
+        question: function (newQuestion, oldQuestion) {
+          this.answer = 'Waiting for you to stop typing...';
+          this.debouncedGetAnswer();
+        },
+      },
+      created: function () {
+        console.log('created');
+        this.debouncedGetAnswer = this.getAnswer;
+      },
+      computed: {
+        reversedMessage: function () {
+          return 12;
+        },
+
+        // question: {
+        //   get: function () {
+        //     return 1212;
+        //   },
+        //   set: function (newValue) {
+        //     return newValue;
+        //   },
+        // },
+      },
+      methods: {
+        addSize: function (v) {
+          console.log(v);
+          this.postFontSize += 0.1;
+        },
+
+        buttonClick: function () {
+          console.log(this.groceryList);
+          this.msg = this.msg.split('').reverse().join('');
+        },
+
+        now: function () {
+          return Date.now();
+        },
+
+        addGrocery: function () {
+          console.log(this.groceryList[0].text);
+          this.groceryList.push({ id: new Date().toString(), text: this.groceryText });
+          this.groceryText = '';
+        },
+
+        getAnswer: function () {
+          if (this.question.indexOf('?') === -1) {
+            this.answer = 'Questions usually contain a question mark. ;-)';
+            return;
+          }
+          this.answer = 'Thinking...';
+          var vm = this;
+          axios
+            .get('https://yesno.wtf/api')
+            .then(function (response) {
+              vm.answer = _.capitalize(response.data.answer);
+            })
+            .catch(function (error) {
+              vm.answer = 'Error! Could not reach the API. ' + error;
+            });
+        },
+
+        changeToggle: function () {
+          // this.toggle = !this.toggle;
+          console.log(this.toggle, this.a);
+        },
+      },
+    });
+  </script>
+</html>
